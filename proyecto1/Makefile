@@ -1,4 +1,5 @@
-DIRS = exercise_6 exercise_7
+DIRS = exercise_1 exercise_2 exercise_3 \
+	exercise_4 exercise_6 exercise_7
 # the sets of directories to do various things in
 BUILDDIRS = $(DIRS:%=build-%)
 INSTALLDIRS = $(DIRS:%=install-%)

@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-g -o
 TFLAGS=-g -lpthread -lrt -o
-DEST = ../build
+DEST = ../build/fedora
 
 all: server.o client.o parallel_server.o
 

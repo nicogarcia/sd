@@ -14,7 +14,7 @@
 /** To add exercises modify this 3 parameters */
 const int exercises_qty = 9;
 char* exercises[] = { "./exercise_1", "./exercise_2", "./exercise_3", "./exercise_4", "",
-		"","","","" };
+		"./exercise_6","./exercise_7","","" };
 char* exercises_titles[] = {
 		"Ejercicio 1: Creacion de procesos",
 		"Ejercicio 2: Carga de imagen ejecutable",
