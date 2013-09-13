@@ -12,10 +12,19 @@
 #include <unistd.h>
 
 /** To add exercises modify this 3 parameters */
-const int exercises_qty = 2;
-char* exercises[] = { "./exercise_1", "./exercise_2" };
-char* exercises_titles[] = { "Ejercicio 1: Creacion de procesos",
-		"Ejercicio 2: Carga de imagen ejecutable"
+const int exercises_qty = 9;
+char* exercises[] = { "./exercise_1", "./exercise_2", "./exercise_3", "./exercise_4", "",
+		"","","","" };
+char* exercises_titles[] = {
+		"Ejercicio 1: Creacion de procesos",
+		"Ejercicio 2: Carga de imagen ejecutable",
+		"Ejercicio 3: Llamadas locales y remotas",
+		"Ejercicio 4: Sockets TCP",
+		"*Ejercicio 5: Minicalculadora Local y RPC",
+		"*Ejercicio 6: Comunicacion pares con sockets",
+		"*Ejercicio 7: Sincronizacion de relojes",
+		"*Ejercicio 8: Explicacion",
+		"*Ejercicio 12: Sockets Java"
 };
 /** ------------------------------------------ **/
 
@@ -29,9 +38,10 @@ int main() {
 
 		system("clear");
 
-		printf("Bienvenido al asistente de prueba del\n");
-		printf("Proyecto N°1 - Sistemas Distribuidos 2013\n");
-		printf("-----------------------------------------\n");
+		printf("=============================================\n");
+		printf("  Bienvenido al asistente de prueba del\n");
+		printf("  Proyecto N°1 - Sistemas Distribuidos 2013\n");
+		printf("=============================================\n");
 		printf("Elija un ejercicio para ejecutar:\n\n");
 
 		for (i = 0; i < exercises_qty; i++) {
@@ -73,8 +83,7 @@ void launch_excercise(int i) {
 	}
 	waitpid(pid, 0, 0);
 
-	printf(
-			"\n*** Ejecucion finalizada, presione enter para continuar...\n");
+	printf("\n*** Ejecucion finalizada, presione enter para continuar...\n");
 	getchar();
 	getchar();
 }

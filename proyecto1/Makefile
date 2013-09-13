@@ -1,19 +1,7 @@
-all: project_tester exercise_1 exercise_2_image exercise_2 exercise_4
+all: fedora
 	
-project_tester: project_tester/project_tester.c
-	gcc -g -o build/$@ $^
+include makefiles/Makefile_alpha
 	
-exercise_1: exercise_1/exercise_1.c
-	gcc -g -o build/$@ $^
+include makefiles/Makefile_sun
 	
-exercise_2_image: exercise_2/exercise_2_image.c
-	gcc -g -lrt -o build/$@ $^
-	
-exercise_2: exercise_2/exercise_2.c
-	gcc -g -lrt -o build/$@ $^
-
-exercise_4: exercise_4/server.c exercise_4/client.c 
-	gcc -g -o build/$@ $^
-	
-clean:
-	rm -rf build/*
+include makefiles/Makefile_fedora

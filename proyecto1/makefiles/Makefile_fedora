@@ -1,0 +1,37 @@
+BUILD_PATH=build/fedora
+LIBS=lib/table_library.c lib/table_library.h lib/config.c lib/config.h 
+ 
+fedora: build_dir project_tester.o exercise_1.o exercise_2_image.o exercise_2.o \
+	exercise_4.o exercise_4_server.o exercise_4_client.o \
+	exercise_3.o
+	
+build_dir:
+	mkdir -p $(BUILD_PATH) 
+	
+project_tester.o: project_tester/project_tester.c
+	cp project_tester/project_config $(BUILD_PATH)
+	gcc -g -o $(BUILD_PATH)/project_tester $^
+	
+exercise_1.o: exercise_1/exercise_1.c
+	gcc -g -o $(BUILD_PATH)/exercise_1 $^
+	
+exercise_2_image.o: exercise_2/exercise_2_image.c
+	gcc -g -lrt -o $(BUILD_PATH)/exercise_2_image $^
+	
+exercise_2.o: exercise_2/exercise_2.c
+	gcc -g -lrt -o $(BUILD_PATH)/exercise_2 $^
+
+exercise_3.o: $(LIBS) exercise_3/exercise_3.c 
+	gcc -g -o $(BUILD_PATH)/exercise_3 $^
+	
+exercise_4.o: $(LIBS) exercise_4/exercise_4.c 
+	gcc -g -o $(BUILD_PATH)/exercise_4 $^
+	
+exercise_4_server.o: exercise_4/server.c
+	gcc -g -o $(BUILD_PATH)/exercise_4_server $^
+
+exercise_4_client.o: exercise_4/client.c
+	gcc -g -o $(BUILD_PATH)/exercise_4_client $^
+	
+clean:
+	rm -rf $(BUILD_PATH)/*

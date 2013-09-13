@@ -13,7 +13,7 @@
 #define BUFFER_SIZE 2048 /* Tamaño del mensaje */
 
 int sockfd, /* Descriptor del socket del cliente */
-	portno; /* NUmero de puerto 
+	portno; /* NUmero de puerto */
 
 struct sockaddr_in serv_addr; /* Direccion del socket del servidor */
 
