@@ -4,19 +4,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/time.h>
+#include <time.h>
 
 #define BACKLOG 5 /* Cantidad de clientes que pueden ser atendidos al simultaneo */
-#define DEFAULT_BUFFER_SIZE 2048
+#define BUFFER_SIZE 2048
 
 int sockfd, /* File descriptor del socket del servidor */
 	portno; /* Numero de puerto donde el servidor acepta conexiones */
-     
-int *buffer_sizes;
-int n_tests = 1;
+
 
 int served_clients; /* Cantidad de clientes servidos */
 
@@ -32,14 +31,16 @@ void error(const char *msg)
 }
 
 void server_listen()
-{    
+{
+	double et;
+	struct timeval t1, t2;
 	int newsockfd;
 	struct sockaddr_in cli_addr; /* Direccion del socket del cliente */
-
-	socklen_t clilen = sizeof(cli_addr);	
+	socklen_t clilen = sizeof(cli_addr);
 	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); /* Espero por pedidos de clientes */
+
 	if (newsockfd < 0)
-			error("ERROR aceptando la petición");
+		error("ERROR aceptando la petición");
 
 	//Realizo la tarea de servicio al cliente
 	server_task(newsockfd);
@@ -47,49 +48,47 @@ void server_listen()
 
 
 void server_task(int newsockfd)
-{	
-    char *buffer; /* Creo el buffer para recibir el mensaje */
-    int test,
-    	buffsize;
+{
+    struct timeval time; /* Creo el buffer para recibir el mensaje */
+    char buffer[BUFFER_SIZE];
+    bzero(buffer, BUFFER_SIZE); /* Seteo todos los valores del buffer a cero */
 
-	for(test = 0; test < n_tests; test++)
-	{
-		buffsize = buffer_sizes[test];
-		buffer = calloc(buffsize, sizeof(char)); /* Creo el nuevo buffer */
+    while(1)
+    {
+    	/* Leo los datos enviados por el cliente */
+    	if (recv(newsockfd, buffer, BUFFER_SIZE - 1, 0) < 0)
+    		error("ERROR leyendo del socket");
 
-		bzero(buffer, buffsize); /* Seteo todos los valores del buffer a cero */
-	
-		/* Leo los datos enviados por el cliente */
-		if (recv(newsockfd, buffer, buffsize - 1, 0) < 0)
-			error("ERROR leyendo del socket");
-	
-		if (send(newsockfd, buffer, buffsize - 1, 0) < 0) /* Envio la respuesta al cliente */
-			error("ERROR escribiendo en el socket");
+    	gettimeofday(&time, NULL);
 
-	}
+    	if (send(newsockfd, &time, sizeof(struct timeval), 0) < 0) /* Envio la respuesta al cliente */
+    		error("ERROR escribiendo en el socket");
+
+    }
+
     close(newsockfd); /* Termino la conexion con el cliente */
 }
 
 void server_init(int port)
-{ 	
+{
 	struct sockaddr_in serv_addr; /* sockaddr_in es una estructura que contiene una direccion de internet */
 	portno = port;
 
 	//Creo un socket del tipo stream
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) 
+	if (sockfd < 0)
 		error("ERROR abriendo el socket");
-	     
-	bzero((char *) &serv_addr, sizeof(serv_addr)); /* Seteo todos los valores de la estructura a cero. */	
-   
+
+	bzero((char *) &serv_addr, sizeof(serv_addr)); /* Seteo todos los valores de la estructura a cero. */
+
 	//Seteo todos los parametros de la direccion de internet del servidor
 	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;	     
+	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(portno); /* Convierto a orden de la red */
-	     
+
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) /* Intento vincular el puerto */
 		error("ERROR vinculando el socket");
-	    
+
 	listen(sockfd, BACKLOG); /* Permito escuchar en ese puerto */
 }
 
@@ -102,46 +101,16 @@ void server_exit()
 
 int main(int argc, char *argv[])
 {
-	int tests,
-		port;
-
 	if (argc < 2) {
-		fprintf(stderr,"usage: %s port[-b buffer_lenght[,...]]\n", argv[0]);
+		fprintf(stderr,"usage: %s port\n", argv[0]);
 		exit(1);
 	}
-	
-	port = atoi(argv[1]);
 
-	//Obtengo el tamaño del buffer, si no se paso se usa el tamaño por defecto
-	if(argc >= 2)
-	{
-		if(!strcmp(argv[2], "-b")){
-			tests = argc - 3; /* Obtengo la cantidad de buffers a probar */
-			n_tests = tests;
-			buffer_sizes = calloc(n_tests, sizeof(char));
-			while(tests > 0)
-			{
-				buffer_sizes[n_tests - tests] = atoi(argv[tests + 2]);
-				tests--;
-			}
-		}
-		else{
-			fprintf(stderr,"usage: %s port [-b buffer_lenght[,...]]\n", argv[0]);
-			exit(0);
-		}
-	}
-	else
-	{
-		n_tests = 1;
-		buffer_sizes = calloc(1, sizeof(char));
-		buffer_sizes[0] = DEFAULT_BUFFER_SIZE;
-	}
-
-	server_init(port); /* Inicializo el servidor */
+	server_init(atoi(argv[1])); /* Inicializo el servidor */
 	server_listen(); /* Escucho por peticiones */
 	server_exit(); /* Cierro el servidor */
 
-    return 0; 
+    return 0;
 }
 
 
