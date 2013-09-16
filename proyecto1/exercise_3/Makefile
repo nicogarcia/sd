@@ -7,7 +7,7 @@ LIBS=../lib/table_library.h ../lib/config.h ../lib/table_library.c ../lib/config
 all: exercise_3.o
 
 exercise_3.o: exercise_3.c
-	$(CC) $(TFLAGS) $(DEST)/$@  $(LIBS) $^ 
+	$(CC) $(TFLAGS) $(DEST)/$(basename $@)  $(LIBS) $^ 
 
 clean:
 	rm -rf *o build/*

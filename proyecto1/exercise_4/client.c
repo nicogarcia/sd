@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	}	
 	//Obtengo el tamaño del buffer, si no se paso se usa el tamaño por defecto
-	if(argc >= 3)
+	if(argc > 3)
 	{
 		if(!strcmp(argv[3], "-b")){
 			tests = argc - 4; /* Obtengo la cantidad de buffers a probar */
@@ -167,6 +167,9 @@ int main(int argc, char *argv[])
 
 	tests_res.tests = calloc(tests_res.n_tests, sizeof(double));
 
+	system("clear");
+	printf("Esperando al servidor...\n");
+
 	client_init(atoi(argv[2]), argv[1]);
 
 	gettimeofday(&t1, NULL);
@@ -179,11 +182,11 @@ int main(int argc, char *argv[])
 	tests_res.conn_time = et;
 
 	client_request();
-
-
    
 	show_results();
     close(sockfd); /* Cierro la conexion */
 
+    printf("Presione una tecla para salir...\n");
+    getchar();
     return 0;
 }

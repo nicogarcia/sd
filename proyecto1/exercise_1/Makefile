@@ -6,7 +6,7 @@ DEST = ../build/fedora
 all: exercise_1.o 
 
 exercise_1.o: exercise_1.c
-	$(CC) $(TFLAGS) $(DEST)/$@ $^
+	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
 
 clean:
 	rm -rf *o build/*

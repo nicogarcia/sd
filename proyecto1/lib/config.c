@@ -5,6 +5,31 @@
 
 machine* machines[] = { &alpha, &sun, &fedora };
 machine* default_machines[] = { &default_alpha, &default_sun, &default_fedora };
+int launched_times = 0;
+
+machine* choose_machine() {
+	int i;
+	int chosen;
+	char input[3];
+
+	for (i = 0; i < 3; i++)
+		printf("%d - %s\n", i + 1, machines[i]->name);
+	printf("Opcion: ");
+	fgets(input, 3, stdin);
+	while (input != NULL && *input == '\n') {
+		printf("Opcion: ");
+		fgets(input, 3, stdin);
+	}
+	chosen = strtol(input, NULL, 10);
+	fflush(stdin);
+
+	while (!(chosen > 0 && chosen <= 3)) {
+		printf("Opcion invalida. Ingrese nuevamente.\nOpcion: ");
+		chosen = getchar() - '0';
+		getchar();
+	}
+	return machines[chosen - 1];
+}
 
 void load_config(char* filename) {
 	FILE* fp = fopen(filename, "r");
@@ -41,37 +66,70 @@ void print_all_configs() {
 void change_config() {
 	int i;
 	char* res;
+	char* pos;
 	for (i = 0; i < 3; i++) {
 		printf("%s IP [%s]: ", machines[i]->name, default_machines[i]->ip);
-		fflush(0);
 		res = fgets(machines[i]->ip, 50, stdin);
-		if (res == NULL)
+		if ((pos = strchr(res, '\n')) != NULL)
+			*pos = 0;
+		if (*res == 0)
 			strcpy(machines[i]->ip, default_machines[i]->ip);
 
 		printf("%s Port [%s]: ", machines[i]->name, default_machines[i]->port);
 		res = fgets(machines[i]->port, 50, stdin);
-		if (res == NULL)
+		if ((pos = strchr(res, '\n')) != NULL)
+			*pos = 0;
+		if (*res == 0)
 			strcpy(machines[i]->port, default_machines[i]->port);
 
 		printf("%s User [%s]: ", machines[i]->name, default_machines[i]->user);
 		res = fgets(machines[i]->user, 50, stdin);
-		if (res == NULL)
+		if ((pos = strchr(res, '\n')) != NULL)
+			*pos = 0;
+		if (*res == 0)
 			strcpy(machines[i]->user, default_machines[i]->user);
 
 		printf("%s Pass [%s]: ", machines[i]->name, default_machines[i]->pass);
 		res = fgets(machines[i]->pass, 50, stdin);
-		if (res == NULL)
+		if ((pos = strchr(res, '\n')) != NULL)
+			*pos = 0;
+		if (*res == 0)
 			strcpy(machines[i]->pass, default_machines[i]->pass);
 
 	}
 	fflush(0);
 }
 
-void deploy_server(machine* m) {
-	char str[255] = "xterm -hold -e scp ";
+void deploy(machine* m, char* execute_command) {
+	char str[2500];
 
-	printf("Enviando script de deployment...\n");
-	sprintf(str + strlen(str), "deployment_script_%s %s@%s", m->name, m->user);
-
+	// File uploading
+	strcpy(str, "xterm -e ");
+	sprintf(str + strlen(str), "\"sftp -b deployment_script_sftp %s@%s \"",
+			m->user, m->ip);
+	printf("\tEnviando script de deployment...\n");
 	system(str);
+
+	// Project compilation
+	strcpy(str, "xterm -e ");
+	sprintf(str + strlen(str),
+			"\"ssh %s@%s \\\"/bin/bash < deployment_script_ssh \\\" \"",
+			m->user, m->ip);
+	printf("\tCompilando en servidor...\n");
+	system(str);
+
+	// Project compilation
+	if (launched_times % 2)
+		strcpy(str,
+				"(xterm -fg white -bg black -geometry 100x24-0+0 -e ");
+	else
+		strcpy(str,
+				"(xterm -fg white -bg blue -geometry 100x24-0-0 -e ");
+	sprintf(str + strlen(str),
+			"\"ssh -t %s@%s \\\"/bin/bash <(echo ~/project1_src/build/fedora/./%s) \\\" \""
+					") &", m->user, m->ip, execute_command);
+	printf("\tEjecutando...\n");
+	system(str);
+
+	launched_times++;
 }

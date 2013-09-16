@@ -11,9 +11,13 @@ typedef struct mq {
 } machine;
 
 machine alpha, default_alpha;
-machine sun,default_sun;
-machine fedora,default_fedora;
+machine sun, default_sun;
+machine fedora, default_fedora;
 
+extern machine* machines[];
+extern machine* default_machines[];
+
+machine* choose_machine();
 
 void load_config(char* filename);
 

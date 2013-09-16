@@ -9,29 +9,27 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <string.h>
 #include <unistd.h>
 
 /** To add exercises modify this 3 parameters */
 const int exercises_qty = 9;
-char* exercises[] = { "./exercise_1", "./exercise_2", "./exercise_3", "./exercise_4", "",
-		"./exercise_6","./exercise_7","","" };
-char* exercises_titles[] = {
-		"Ejercicio 1: Creacion de procesos",
+char* exercises[] = { "./exercise_1", "./exercise_2", "./exercise_3",
+		"./exercise_4", "", "./exercise_6", "./exercise_7", "", "" };
+char* exercises_titles[] = { "Ejercicio 1: Creacion de procesos",
 		"Ejercicio 2: Carga de imagen ejecutable",
-		"Ejercicio 3: Llamadas locales y remotas",
-		"Ejercicio 4: Sockets TCP",
+		"Ejercicio 3: Llamadas locales y remotas", "Ejercicio 4: Sockets TCP",
 		"*Ejercicio 5: Minicalculadora Local y RPC",
 		"*Ejercicio 6: Comunicacion pares con sockets",
-		"*Ejercicio 7: Sincronizacion de relojes",
-		"*Ejercicio 8: Explicacion",
-		"*Ejercicio 12: Sockets Java"
-};
+		"*Ejercicio 7: Sincronizacion de relojes", "*Ejercicio 8: Explicacion",
+		"*Ejercicio 12: Sockets Java" };
 /** ------------------------------------------ **/
 
 void launch_excercise(int i);
 
 int main() {
 	int i;
+	char input[3];
 	int ex_selector;
 
 	while (1) {
@@ -48,14 +46,16 @@ int main() {
 			printf("%i. %s\n", i + 1, exercises_titles[i]);
 		}
 
-		printf("\nOpcion [ 0 para salir ]: ");
-		scanf("%i", &ex_selector);
-		fflush(0);
-
-		if (ex_selector == 0) {
+		printf("\nOpcion [ enter para salir ]: ");
+		fgets(input, 3, stdin);
+		if (input != NULL && *input == '\n') {
 			printf("\nHasta luego!\n");
 			break;
-		} else if (ex_selector > 0 && ex_selector <= exercises_qty) {
+		}
+		ex_selector = strtol(input, NULL, 10);
+		fflush(stdin);
+
+		if (ex_selector > 0 && ex_selector <= exercises_qty) {
 			system("clear");
 			printf("%s\n", exercises_titles[ex_selector - 1]);
 			printf("----------------------------------------\n");

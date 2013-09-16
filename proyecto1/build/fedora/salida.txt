@@ -1,2 +1,0 @@
-Soy la imagen ejecutable cuyo pid es: 
-30041

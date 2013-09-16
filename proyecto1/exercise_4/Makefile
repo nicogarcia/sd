@@ -6,11 +6,11 @@ LIBS=../lib/config.h ../lib/config.c
 
 all: exercise_4.o exercise_4_server.o exercise_4_client.o
 
-exercise_4.o: $(LIBS) exercise_4.c 
-	$(CC) $(TFLAGS) $(DEST)/$@ $^
+exercise_4.o: $(LIBS) exercise_4.c
+	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
 	
 exercise_4_server.o: server.c
-	$(CC) $(TFLAGS) $(DEST)/$@ $^
+	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
 
 exercise_4_client.o: client.c
-	$(CC) $(TFLAGS) $(DEST)/$@ $^
+	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
