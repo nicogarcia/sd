@@ -7,12 +7,12 @@ typedef struct mq {
 	char ip[50];
 	char port[50];
 	char user[50];
-	char pass[50];
 } machine;
 
 machine alpha, default_alpha;
 machine sun, default_sun;
 machine fedora, default_fedora;
+machine local, default_local;
 
 extern machine* machines[];
 extern machine* default_machines[];

@@ -19,6 +19,7 @@ table* table_initialize(int columns, int* widths) {
 	t->columns = columns;
 	t->rows = 0;
 	t->initialized = 1;
+	t->rows_data = NULL;
 
 	return t;
 }
@@ -32,8 +33,7 @@ void table_add_row(table* t) {
 	}
 
 	// Grow rows
-	t->rows_data = (char***) realloc(t->rows_data,
-			sizeof(char*) * (t->rows + 1));
+	t->rows_data = (char** *) realloc(t->rows_data,	sizeof(char**) * (t->rows + 1));
 
 	// Create row
 	t->rows_data[t->rows] = (char**) malloc(sizeof(char*) * t->columns);

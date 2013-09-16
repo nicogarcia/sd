@@ -5,27 +5,11 @@
 
 int main() {
 	pid_t pid;
-	char answer;
 	char str[255];
 	machine* server;
 	machine* client;
 
-	load_config("project_config");
-
-	print_all_configs();
-	printf("\nEsta es la configuracion actual, desea mantenerla? [y/n] ");
-	answer = getchar();
-	fflush(stdin);
-
-	while (answer == 'n') {
-		fflush(stdin);
-		getchar();
-		change_config();
-		print_all_configs();
-		printf("\nEsta es la configuracion actual, desea mantenerla? [y/n] ");
-		answer = getchar();
-		fflush(stdin);
-	}
+	config_server();
 
 	printf("Elija el servidor:\n");
 	server = choose_machine();

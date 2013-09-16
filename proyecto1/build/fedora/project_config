@@ -1,3 +1,4 @@
-Alpha 192.168.0.200 8080 nico nico
-Sun 192.168.0.53 8081 nico nico
-Fedora 192.168.0.200 8082 nico nico
+Alpha 192.168.0.53 8080 nico
+Sun 192.168.0.53 8081 nico
+Fedora 192.168.0.200 8082 nico
+Local 127.0.0.1 8083 nico

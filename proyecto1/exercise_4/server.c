@@ -33,7 +33,7 @@ void error(const char *msg) {
 
 void sig_handler(int nro){
 	if(nro == SIGINT){
-		printf("Servidor finalizado por el usuario.\n");
+		printf("\nServidor finalizado por el usuario.\n");
 		server_exit();
 		exit(0);
 	}

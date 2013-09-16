@@ -12,7 +12,7 @@ $(BUILDDIRS):
 	mkdir -p build/fedora
 	mkdir -p build/fedora/project1_src
 	cp -ru -t build/fedora/project1_src $(DIRS) lib/ Makefile
-	tar ufa build/fedora/project1_src.tar.gz -C build/fedora project1_src/
+	tar cfa build/fedora/project1_src.tar.gz -C build/fedora project1_src/
 	$(MAKE) -C $(@:build-%=%)
 
 # the utils need the libraries in dev built first

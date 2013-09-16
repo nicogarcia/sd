@@ -1,3 +1,3 @@
-put project1_src.tar.gz		# upload project source
-put deploy_temp				# upload ssh script
-chmod 766 deploy_temp
+put project1_src.tar.gz			# upload project source
+put deployment_script_ssh		# upload ssh script
+chmod 766 deployment_script_ssh
