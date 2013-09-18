@@ -32,14 +32,6 @@ void error(const char *msg) {
 	exit(1);
 }
 
-void sig_handler(int nro){
-	if(nro == SIGINT){
-		printf("\nServidor finalizado por el usuario.\n");
-		server_exit();
-		exit(0);
-	}
-}
-
 void server_listen() {
 	int newsockfd;
 	struct sockaddr_in cli_addr; /* Direccion del socket del cliente */
@@ -145,7 +137,6 @@ int main(int argc, char *argv[]) {
 		buffer_sizes[0] = DEFAULT_BUFFER_SIZE;
 	}
 
-	signal(SIGINT, sig_handler);
 	server_init(port); /* Inicializo el servidor */
 	server_listen(); /* Escucho por peticiones */
 	server_exit(); /* Cierro el servidor */
