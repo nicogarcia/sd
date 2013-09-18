@@ -48,13 +48,15 @@ void table_add_row(table* t) {
 }
 
 void table_add_data(table* t, int row, int column, char* format, ...) {
+	va_list arguments;
+
 	if (row >= t->rows && column >= t->columns) {
 		printf("*** ERROR: Attempt to add data in bad index (%i, %i)\n", row,
 				column);
 		return;
 	}
 
-	va_list arguments;
+
 
 	va_start(arguments, format);
 	vsprintf(t->rows_data[row][column], format, arguments);

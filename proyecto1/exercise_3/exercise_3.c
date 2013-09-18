@@ -73,6 +73,7 @@ int main() {
 	table* t;
 	int widths[] = { 20, 20, 20 };
 	machine* server;
+	half_long_string hl_str;
 
 	config_server();
 
@@ -83,7 +84,6 @@ int main() {
 	sleep(5);
 
 	// 1028 bytes arg
-	half_long_string hl_str;
 	for (i = 0; i < 1024; i++) {
 		hl_str.str1[i] = 65 + i % 26;
 		hl_str.str2[i] = 65 + i % 26;

@@ -1,4 +1,4 @@
-tar xf project1_src.tar.gz  # decompress source
+tar xfz project1_src.tar.gz  # decompress source
 cd project1_src
 make						# build project (TODO: add make Alpha or other dist)
 cd build/fedora				# change to appropiate distribution/arch
