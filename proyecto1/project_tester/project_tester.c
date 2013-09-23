@@ -20,8 +20,8 @@ char* exercises_titles[] = { "Ejercicio 1: Creacion de procesos",
 		"Ejercicio 2: Carga de imagen ejecutable",
 		"Ejercicio 3: Llamadas locales y remotas", "Ejercicio 4: Sockets TCP",
 		"*Ejercicio 5: Minicalculadora Local y RPC",
-		"*Ejercicio 6: Comunicacion pares con sockets",
-		"*Ejercicio 7: Sincronizacion de relojes", "*Ejercicio 8: Explicacion",
+		"Ejercicio 6: Comunicacion pares con sockets",
+		"Ejercicio 7: Sincronizacion de relojes", "*Ejercicio 8: Explicacion",
 		"*Ejercicio 12: Sockets Java" };
 /** ------------------------------------------ **/
 

@@ -1,12 +1,12 @@
 CC=gcc
-CFLAGS=-g -o
-TFLAGS=-g -lrt -o
+CFLAGS=-g -Wall
+TFLAGS=-lrt -o
 DEST = ../build/fedora
 
 all: exercise_1.o 
 
 exercise_1.o: exercise_1.c
-	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
+	$(CC) $(CFLAGS) $(TFLAGS) $(DEST)/$(basename $@) $^
 
 clean:
 	rm -rf *o build/*

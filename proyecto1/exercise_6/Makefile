@@ -1,5 +1,5 @@
 CC=gcc
-TFLAGS=-g -lpthread -lrt -o
+TFLAGS=-g -lpthread -lrt -lnsl -o # -lsocket
 DEST = ../build/fedora
 LIBS = ../lib/config.h ../lib/config.c p2p.h
 

@@ -10,7 +10,7 @@ typedef struct mq {
 } machine;
 
 machine alpha, default_alpha;
-machine sun, default_sun;
+machine sun_m, default_sun;
 machine fedora, default_fedora;
 machine local, default_local;
 
@@ -26,5 +26,9 @@ void print_config(machine* m);
 void print_all_configs();
 
 void change_config();
+
+void config_server();
+
+void deploy(machine* m, char* execute_command);
 
 #endif

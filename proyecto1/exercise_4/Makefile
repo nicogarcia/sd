@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-g -o
-TFLAGS=-g -lrt -lpthread -o
+TFLAGS=-g -lrt -lpthread -lnsl  -o #-lsocket
 DEST = ../build/fedora
 LIBS=../lib/table_library.h ../lib/table_library.c 
 

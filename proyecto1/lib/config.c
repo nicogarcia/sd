@@ -4,8 +4,9 @@
 #include <string.h>
 
 const int MACHINES_QTY = 4; // ALPHA, SUN, FEDORA, LOCALHOST
-machine* machines[] = { &alpha, &sun, &fedora, &local};
-machine* default_machines[] = { &default_alpha, &default_sun, &default_fedora, &default_local };
+machine* machines[] = { &alpha, &sun_m, &fedora, &local };
+machine* default_machines[] = { &default_alpha, &default_sun, &default_fedora,
+		&default_local };
 int launched_times = 0;
 
 void config_server() {
@@ -118,25 +119,32 @@ void deploy(machine* m, char* execute_command) {
 
 	printf("\t====== %s ======\n", m->name);
 	// File uploading
-	strcpy(str, "xterm -geometry 100x24-0+0 -e ");
+	sprintf(str,
+			"xterm -geometry 100x24-0+0 -T \"%s Project Upload - %s \" -e ",
+			m->name, m->ip);
 	sprintf(str + strlen(str), "\"sftp %s@%s < deployment_script_sftp  \"",
 			m->user, m->ip);
 	printf("\tEnviando script de deployment...\n");
 	system(str);
 
 	// Project compilation
-	strcpy(str, "xterm -geometry 100x24-0+0 -e ");
+	sprintf(str, "xterm -geometry 100x24-0+0 -T \"%s Compilation - %s \" -e ",
+			m->name, m->ip);
 	sprintf(str + strlen(str),
 			"\"ssh %s@%s \\\"/bin/bash < deployment_script_ssh \\\" \"",
 			m->user, m->ip);
 	printf("\tCompilando...\n");
 	system(str);
 
-	// Project compilation
+	// Project execution
 	if (launched_times % 2)
-		strcpy(str, "(xterm -hold -fg white -bg black -geometry 100x24-0+0 -e ");
+		sprintf(str,
+				"(xterm -hold -fg white -bg black -geometry 100x24-0+0  -T \"%s Project execution - %s \" -e ",
+				m->name, m->ip);
 	else
-		strcpy(str, "(xterm -hold -fg white -bg blue -geometry 100x24-0-0 -e ");
+		sprintf(str,
+				"(xterm -hold -fg white -bg blue -geometry 100x24-0-0  -T \"%s Project execution- %s \" -e ",
+				m->name, m->ip);
 	sprintf(str + strlen(str),
 			"\"ssh -t %s@%s \\\"/bin/bash <(echo ~/project1_src/build/fedora/%s) \\\" \""
 					") &", m->user, m->ip, execute_command);

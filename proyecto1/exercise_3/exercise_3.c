@@ -15,7 +15,7 @@ int local_call_4(int num) {
 
 long_string local_call_2048(half_long_string str1) {
 	long_string l;
-	int n;
+	int n = 2;
 
 	n = n + n - n / n;
 
@@ -66,9 +66,7 @@ void rpc_call_4(char *host, int arg_4bytes) {
 }
 
 int main() {
-	int i, j;
-	pid_t pid;
-	int max_proc_count = 0;
+	int i;
 	struct timespec start, end, diff[8];
 	table* t;
 	int widths[] = { 20, 20, 20 };
