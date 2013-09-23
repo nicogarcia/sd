@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-g -o
-TFLAGS=-g -lpthread -lrt -o
+TFLAGS=-g -lpthread -lrt -o #-lsocket
 DEST = ../build/fedora
 
 all: server.o client.o parallel_server.o

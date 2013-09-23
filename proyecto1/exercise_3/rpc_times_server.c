@@ -17,8 +17,8 @@ rpc_call_2048_1_svc(half_long_string *argp, struct svc_req *rqstp) {
 
 	n = n + n - n / n;
 
-	strcpy(result, *argp->str1);
-	strcpy(result + 1024, *argp->str2);
+	strcpy(result.str, *argp->str1);
+	strcpy(result.str + 1024, *argp->str2);
 
 	return &result;
 }
