@@ -19,33 +19,22 @@
 #define PAYLOAD_SIZE 2048
 
 
-enum msg_t { GET_USERS, GET_TIME, GET_UNAME, GET_TEMP, CLOSE_CONN};
+enum msg_t { GET_USERS, GET_TIME, GET_UNAME, GET_TEMP, GET_SERV_VERSION, CLOSE_CONN};
+
 int buddy_connected,
 	buddy_sockfd,
 	sockfd,
 	peers_connected;
 
-typedef struct{
-	char name[50];
-} user_t;
 
 machine buddy_mach, mach;
 
-typedef struct{
-	enum msg_t type;
-	int lenght;
-	union{
-		user_t users[256];
-		struct timeval time;
-		double temp;
-		struct utsname uname;
-	};
-}message_t;
 
 void peer_connect();
 void *p2p_server(void *ptr);
 void *peer_recv(void *ptr);
 void peer_send(enum msg_t msg_type);
+void peer_exit();
 
 
 

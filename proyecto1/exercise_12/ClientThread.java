@@ -1,6 +1,7 @@
 package proyecto1_java;
 
 import java.io.BufferedReader;
+import java.net.InetAddress;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -27,7 +28,18 @@ public class ClientThread extends Thread {
 		this.port = port;
 		this.buddy_hostname = buddy_hostname;
 		this.buddy_port = buddy_port;
+		this.connect();
 	}
+	
+	private void connect(){
+		try{
+			this.client_socket = new Socket(); /*conectar a un servidor en localhost con puerto 5000*/	
+			this.client_socket.connect(new InetSocketAddress(this.buddy_hostname,  this.buddy_port));
+			System.out.println("Conexión establecida con " + this.buddy_hostname + " " + this.buddy_port);
+			connected = true;
+		}catch(IOException ex){ System.err.println("ERROR : " + ex.getMessage()); };
+	}
+			
 	
 	public void run()
 	{
@@ -35,7 +47,6 @@ public class ClientThread extends Thread {
 			   args[];
 		
 		boolean exit = false;
-		
 		try{
 			
 			while(!exit){
@@ -47,48 +58,47 @@ public class ClientThread extends Thread {
 				
 				args = reader.readLine().split(" ");
 				command = args[0];
-				
+
+				//Comandos que requieren conexion
 				if(command.equals("temp"))
 					this.request(MessageType.GET_TEMP);
 				else if(command.equals("time"))
 					this.request(MessageType.GET_TIME);
 				else if(command.equals("users"))
-					this.request(MessageType.GET_USER);
-				else if(command.equals("help"))
-					this.help_screen();
+					this.request(MessageType.GET_USERS);
 				else if(command.equals("uname"))
 					this.request(MessageType.GET_UNAME);
+				else if(command.equals("version"))
+					this.request(MessageType.GET_SERV_VERSION);
+
+				
 				else if(command.equals("status"))
 					this.status_screen();
+				else if(command.equals("help"))
+					this.help_screen();
 				else if(command.equals("clear"))
 					System.out.print("\033[H\033[2J");
-					//Runtime.getRuntime().exec("clear");
 				else if(command.equals("exit")){
-					if(this.connected)
-						this.request(MessageType.CLOSE);
-					exit = true;
+						if(this.connected)
+						this.request(MessageType.CLOSE_CONN);
+						exit = true;
 					}
 				else if(command.equals("close"))
-						this.request(MessageType.CLOSE);
+						this.request(MessageType.CLOSE_CONN);
 				else if(command.length() > 2 && "connect".startsWith(command)  ){
-					if(args.length == 3){
-						this.buddy_hostname = args[1];
-						this.buddy_port = Integer.parseInt(args[2]);
-					}				
-					if(buddy_hostname != null && buddy_port > 0)
-					{
-						this.client_socket = new Socket(); /*conectar a un servidor en localhost con puerto 5000*/	
-						this.client_socket.connect(new InetSocketAddress(this.buddy_hostname,  this.buddy_port));
-						System.out.println("Conexión establecida con " + this.buddy_hostname + " " + this.buddy_port);
-						connected = true;
+						if(args.length == 3){
+							this.buddy_hostname = args[1];
+							this.buddy_port = Integer.parseInt(args[2]);
+						}				
+						if(buddy_hostname != null && buddy_port > 0)
+							this.connect();							
+						else
+							System.err.println("ERROR : Falta especificar puerto y hostname del compañero");
 					}
-					else
-						System.err.println("ERROR : Falta especificar puerto y hostname del compañero");
-				}					
-					
+				else
+					System.out.println("El comando ingresado no es valido");
 			}
 		}catch(IOException ex){ System.err.println("ERROR : " + ex.getMessage()); };
-		System.out.println("Ejecución finalizada");
 	}
 	
 	private void help_screen()
@@ -110,7 +120,6 @@ public class ClientThread extends Thread {
 		System.out.print(margin);
 		System.out.print("Termina la ejecución actual.\n");
 
-		
 		System.out.print("\nMensajes: Para intercambiar mensajes con otro proceso se necesita que exista una conexión\n");
 		System.out.print(margin);
 		System.out.print("Cuando exista una conexión se notara (pair~). \n\n");
@@ -130,32 +139,51 @@ public class ClientThread extends Thread {
 		System.out.print(margin);
 		System.out.print("Muestra la temperatura actual de la localidad de la maquina par.\n");
 
+		System.out.print("version: version\n");
+		System.out.print(margin);
+		System.out.print("Muestra la version del proceso par.\n");
+		
 		System.out.print("close: close\n");
 		System.out.print(margin);
 		System.out.print("Cierra la conexión con el par.\n");
-
-		
 		
 	}
 
 
 	private void status_screen()
 	{
-		System.out.print("Puerto propio: " + this.port + "\n");
-		System.out.print("Puerto compañero: " + this.buddy_port + "\n");
-		System.out.print("Nombre compañero: " + this.buddy_hostname +"\n");
+		System.out.print("ME\n");
+		System.out.print("  PORT: " + this.port + "\n");
+		try{
+			System.out.print("  HOSTNAME: " + InetAddress.getLocalHost().getHostName() + "\n");
+		}catch(Exception ex) { System.out.println(ex.getMessage()); }
+		
+		System.out.print("PEER\n");
+		System.out.print("  PORT: " + this.buddy_port + "\n");
+		System.out.print("  HOSTNAME: " + this.buddy_hostname +"\n");
 
-		System.out.print("Estado: ");
+		System.out.print("STATE: ");
 		if(connected)
-			System.out.print("Conectado\n");
+			System.out.print("CONNECTED\n");
 		else
-			System.out.print("No conectado\n");
+			System.out.print("NO CONNECTED\n");
 
+	}
+	
+	public byte[] intToByteArray(int value) {
+	    return new byte[] {
+	            (byte)(value >>> 24),
+	            (byte)(value >>> 16),
+	            (byte)(value >>> 8),
+	            (byte)value};
 	}
 	
 	private void request(MessageType type) 
 		   throws IOException
 	{
+		byte[] inData = new byte[256];//allocate space for the entire message
+		String resp;
+		int bytesRead = -1;
 		DataOutputStream output;
 		DataInputStream input;
 	
@@ -164,29 +192,21 @@ public class ClientThread extends Thread {
 			output = new DataOutputStream(this.client_socket.getOutputStream());
 			input = new DataInputStream(this.client_socket.getInputStream());
 			
-			output.write(type.ordinal());
-			System.out.println(input.readUTF());	
-			
-			
+			output.write(intToByteArray(type.ordinal()), 0, 4);					
+			input.read(inData, 0, 256); 
+			resp = new String(inData);			
+			System.out.print(resp);	
+						
 			switch (type) {
-			case CLOSE:
+			case CLOSE_CONN:
 			{
 				this.client_socket.close();
 				this.connected = false;
 				break;
 			}
-	
-			default:
-				break;
 			}
 		}
-		else{
-			System.err.println("ERROR : El intercambio de mensajes solo puede realizarse cuando existe una conexión");
-		}
-		
-			
-		
-		
+		else System.err.println("ERROR : El intercambio de mensajes solo puede realizarse cuando existe una conexión");
 	}
 	
 }

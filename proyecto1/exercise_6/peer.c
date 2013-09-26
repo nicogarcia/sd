@@ -12,20 +12,32 @@
 #include <string.h>
 #include <netdb.h>
 #include <sys/utsname.h>
+#include <signal.h>
 #include "p2p.h"
-
-
-#define MARGIN "    "
 
 void help_screen();
 
-int temp;
 pthread_t server_t;
+
+void sig_handler(int signo)
+{
+  if (signo == SIGINT){
+    printf("\nreceived SIGINT\n");
+    peer_exit();
+    exit(0);
+  }
+}
 
 void error(const char *msg)
 {
     perror(msg);
     exit(1);
+}
+
+void peer_exit()
+{
+	close(sockfd); /* Cierro el socket del servidor */
+	printf("(peer) Connection closed\n");
 }
 
 /**
@@ -69,199 +81,113 @@ void pair_init(char *port)
 
 
 
-void *peer_recv(void *ptr)
-{
-	message_t msg;
-	char buffer[256],
-		*token;
-
-	FILE *fd;
-	int	new_sockfd = *((int *)ptr),
-		i,
-	 	close_connection = 0;
-
-	peers_connected++;
-
-	while(!close_connection)
-	{
-		/* Leo los datos enviados por el cliente */
-		if (recv(new_sockfd, (void *) &msg, sizeof(message_t), 0) < 0)
-			error("ERROR leyendo del socket");
-
-		switch(msg.type)
-		{
-			case GET_USERS:
-			{
-				fd = fopen("/etc/passwd", "r");
-				i = 0;
-				while(fgets(buffer, 255, fd) != NULL){
-					strcpy(buffer, strtok(buffer, ":")); /* El primer token es el nombre de usuario */
-					token = strtok(NULL, ":"); /* El segundo son los privilegios del usuario */
-					token = strtok(NULL, ":"); /* El tercero es el numero del usuario */
-
-					if(atoi(token) >= 1000){
-						strcpy(msg.users[i++].name, buffer);
-					}
-				}
-
-				msg.lenght = i;
-				fclose(fd);
-				break;
-			}
-			case GET_TIME:
-			{
-				gettimeofday(&msg.time, NULL);
-				break;
-			}
-			case GET_TEMP:
-			{
-				msg.temp = temp + (double)(rand() / RAND_MAX);
-				break;
-			}
-			case GET_UNAME:
-			{
-				uname(&msg.uname);
-				break;
-			}
-			case CLOSE_CONN:
-			{
-				close_connection = 1;
-				break;
-			}
-		}
-		send(new_sockfd, (void *) &msg, sizeof(message_t), 0);
-	}
-
-	close(new_sockfd);
-	peers_connected--;
-
-	pthread_exit(0);
-}
-
 
 void peer_send(enum msg_t msg_type)
 {
-	message_t msg;
+	int request_t;
+	char response[256];
 	int i;
 
-	msg.type = msg_type;
+	if(buddy_connected){
+		request_t = htonl(msg_type);
 
-	//Trato de enviar el mensaje, si falla entonces se cayo la conexion
-	if (send(buddy_sockfd, (void *) &msg, sizeof(message_t), 0) < 0){
-		printf("ERROR escribiendo en el socket\n");
-		buddy_connected = 0;
-		return;
-	}
-
-	recv(buddy_sockfd, (void *) &msg, sizeof(message_t), 0);
-
-	switch(msg.type)
-	{
-		case CLOSE_CONN:
-		{
-			printf("Conexión cerrada\n");
+		//Trato de enviar el mensaje, si falla entonces se cayo la conexion
+		if (send(buddy_sockfd, (void *) &request_t, sizeof(int), 0) < 0){
+			printf("ERROR escribiendo en el socket\n");
 			buddy_connected = 0;
-			break;
+			return;
 		}
-		case GET_USERS:
+		recv(buddy_sockfd, (void *) &response, sizeof(response), 0);
+		switch(msg_type)
 		{
-			printf("Los usuarios loggeados en mi compañero son: \n");
-			i = 0;
-
-			while(i < msg.lenght)
-				printf("%s\n", msg.users[i++].name);
-
-			break;
-		}
-		case GET_TIME:
-		{
-			time_t nowtime;
-			struct tm *nowtm;
-			char tmbuf[64], buf[64];
-
-			nowtime = msg.time.tv_sec;
-			nowtm = localtime(&nowtime);
-			strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
-			snprintf(buf, sizeof buf, "%s.%06d", tmbuf, msg.time.tv_usec);
-
-			printf("El tiempo en mi compañero es: %s\n", buf);
-			break;
-		}
-		case GET_UNAME:
-		{
-			printf("Mi compañero es: %s\n", msg.uname.nodename);
-			printf("Arquitectura: %s\n", msg.uname.machine);
-			printf("Sistema operativo: %s %s\n", msg.uname.sysname, msg.uname.version);
-			break;
-		}
-		case GET_TEMP:
-		{
-			printf("La temperatura en la localidad de mi compañero es: %.2f°C\n", msg.temp);
-			break;
+			case CLOSE_CONN:
+			{
+				printf("%s", response);
+				buddy_connected = 0;
+				break;
+			}
+			default:
+			{
+				printf("%s", response);
+				break;
+			}
 		}
 	}
+	else printf("Debe existir una conexión para realizar la operacion deseada\n");
 }
 
 
 void help_screen()
 {
+	char *margin = "     ";
 	printf("connect: connect [buddy_hostname] [buddy_port]\n");
-	printf(MARGIN);
+	printf(margin);
 	printf("Intenta establecer una conexión con el proceso situado en [buddy_hostname] con número de puerto [buddy_port]\n");
 
-	printf("users: users\n");
-	printf(MARGIN);
-	printf("Muestra los usuarios logueados en el sistema par.\n");
-
-	printf("time: time\n");
-	printf(MARGIN);
-	printf("Muestra la hora del sistema par.\n");
-
-	printf("uname: uname\n");
-	printf(MARGIN);
-	printf("Muestra el nombre de la maquina par.\n");
-
-	printf("temp: temp\n");
-	printf(MARGIN);
-	printf("Muestra la temperatura actual de la localidad de la maquina par.\n");
-
-	printf("close: close\n");
-	printf(MARGIN);
-	printf("Cierra la conexión con el par.\n");
+	printf("version: version\n");
+	printf(margin);
+	printf("Muestra la version del proceso par.\n");
 
 	printf("status: status\n");
-	printf(MARGIN);
+	printf(margin);
 	printf("Muestra el estado actual.\n");
 
 	printf("clear: clear\n");
-	printf(MARGIN);
+	printf(margin);
 	printf("Limpia la pantalla de la consola.\n");
 
 	printf("exit: exit\n");
-	printf(MARGIN);
+	printf(margin);
 	printf("Termina la ejecuion actual.\n");
+
+	printf("\nMensajes: Para intercambiar mensajes con otro proceso se necesita que exista una conexión\n");
+	printf(margin);
+	printf("Cuando exista una conexión se notara (pair~). \n\n");
+
+	printf("users: users\n");
+	printf(margin);
+	printf("Muestra los usuarios logueados en el sistema par.\n");
+
+	printf("time: time\n");
+	printf(margin);
+	printf("Muestra la hora del sistema par.\n");
+
+	printf("uname: uname\n");
+	printf(margin);
+	printf("Muestra el nombre de la maquina par.\n");
+
+	printf("temp: temp\n");
+	printf(margin);
+	printf("Muestra la temperatura actual de la localidad de la maquina par.\n");
+
+	printf("close: close\n");
+	printf(margin);
+	printf("Cierra la conexión con el par.\n");
 
 }
 
 
 void status_screen()
 {
-	printf("Puerto propio: %s\n", mach.port);
-	printf("Nombre propio: %s\n", mach.name);
-	printf("IP propia: %s\n", mach.ip);
+
+	printf("ME\n");
+	printf("  PORT: %s\n", mach.port);
+	printf("  HOSTNAME: %s\n", mach.name);
+	printf("  IP: %s\n", mach.ip);
 
 
-	printf("Puerto compañero: %s\n", buddy_mach.port);
-	printf("Nombre compañero: %s\n", buddy_mach.name);
-	printf("IP compañero: %s\n", buddy_mach.ip);
+	printf("PEER\n");
+	printf("  PORT: %s\n", buddy_mach.port);
+	printf("  HOSTNAME: %s\n", buddy_mach.name);
+	printf("  IP: %s\n", buddy_mach.ip);
 
-	printf("Estado: ");
+	printf("STATE: ");
 	if(buddy_connected)
-		printf("Conectado\n");
+		printf("CONNECTED\n");
 	else
-		printf("No conectado\n");
+		printf("NO CONNECTED\n");
 
-	printf("Pares conectados: %i\n", peers_connected);
+	printf("PEERs CONNECTED: %i\n", peers_connected);
 
 
 }
@@ -270,7 +196,6 @@ void command_selector()
 {
 	char command[50];
 	char *token;
-	enum msg_t op;
 	int exit = 0;
 
 	while(!exit)
@@ -281,43 +206,41 @@ void command_selector()
 		printf(") ");
 
 		scanf ("%[^\n]%*c", command);
+		token = strtok(command, " ");
 
-		if(!strcmp(command, "help"))
-				help_screen();
-		else if(!strcmp(command, "status"))
+		if(!strcmp(token, "help"))
+			help_screen();
+		else if(!strcmp(token, "status"))
 				status_screen();
-			else if(!strcmp(command, "clear"))
-					system("clear");
-			else if(!strcmp(command, "exit"))
-					exit = 1;
-			else{
-				if(buddy_connected){
-					if(!strcmp(command, "temp"))
-							op = GET_TEMP;
-						else if(!strcmp(command, "close"))
-								op = CLOSE_CONN;
-							else if(!strcmp(command, "users"))
-									op = GET_USERS;
-								else if(!strcmp(command, "uname"))
-										op = GET_UNAME;
-									else if(!strcmp(command, "time"))
-											op = GET_TIME;
-					peer_send(op);
-				}
-				else{
-					token = strtok(command, " ");
-					if(!strcmp(token, "connect"))
-					{
-						if((token = strtok(NULL, " ")) != NULL){
-							strcpy(buddy_mach.name, token);
-							if((token = strtok(NULL, " ")) != NULL){
-								strcpy(buddy_mach.port, token);
-							}
-						}
-						peer_connect();
+		else if(!strcmp(token, "clear"))
+				system("clear");
+		else if(!strcmp(token, "exit"))
+				exit = 1;
+
+		//Comandos de conexion
+		else if(!strcmp(token, "temp"))
+				peer_send(GET_TEMP);
+		else if(!strcmp(token, "close"))
+				peer_send(CLOSE_CONN);
+		else if(!strcmp(token, "users"))
+				peer_send(GET_USERS);
+		else if(!strcmp(token, "uname"))
+				peer_send(GET_UNAME);
+		else if(!strcmp(token, "time"))
+				peer_send(GET_TIME);
+		else if(!strcmp(token, "version"))
+				peer_send(GET_SERV_VERSION);
+		else if(!strcmp(token, "connect")){
+				if((token = strtok(NULL, " ")) != NULL){
+					strcpy(buddy_mach.name, token);
+					if((token = strtok(NULL, " ")) != NULL){
+						strcpy(buddy_mach.port, token);
 					}
 				}
+				peer_connect();
 			}
+		else
+			printf("El comando ingresado no es valido\n");
 	}
 
 	//Cierro los sockets
@@ -329,7 +252,8 @@ void peer_connect()
 {
 	struct sockaddr_in serv_addr; /* Direccion del socket del servidor */
 	struct hostent *server = NULL; /* Servidor obtenido por el hostname */
-	int attemps = 0;
+	int attemps = 0,
+		backoff = 1;
 
 	while(server == NULL)
 	{
@@ -355,9 +279,10 @@ void peer_connect()
 
 	//Intento contectar, sino espero
 	while(attemps < MAX_ATTEMPS && connect(buddy_sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
-		sleep(1);
+		sleep(backoff);
 		printf(".");
 		fflush(0);
+		backoff *= 1.5;
 		attemps++;
 	}
 
@@ -366,8 +291,7 @@ void peer_connect()
 	if(attemps < MAX_ATTEMPS){
 		buddy_connected = 1; /* Se establecio conexion con el par */
 	}
-	else
-		printf("Fallo al intentar conectar con el par\n");
+	else printf("Fallo al intentar conectar con el par\n");
 }
 
 
@@ -377,11 +301,11 @@ int main(int argc, char *argv[])
 		fprintf(stderr,"usage: %s port [-s buddy_hostname buddy_port]\n", argv[0]);
 		exit(1);
 	}
+
+	signal(SIGINT, sig_handler); /* Registro el handler de señales */
+
 	pair_init(argv[1]); /* Inicializo el socket */
-
-	temp = abs((rand() * 100) % 27);
 	peers_connected = 0;
-
 	pthread_create(&server_t, NULL, (void *) p2p_server, (void *) NULL);
 
 	if(argc > 2){

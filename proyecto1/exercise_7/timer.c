@@ -9,12 +9,24 @@ typedef struct{
 
 timer_et timer;
 
-double timediff()
+void get_start_time_secs(timer_t *secs)
 {
-	double et;
-	et = (timer.end.tv_sec - timer.start.tv_sec) * 1000.0;      // sec to ms
-	et += (timer.end.tv_usec - timer.start.tv_usec) / 1000.0;   // us to ms
-	return et;
+	*secs = (timer_t)timer.start.tv_sec;
+}
+
+void get_start_time_usecs(timer_t *usecs)
+{
+	*usecs = (timer_t)timer.start.tv_usec;
+}
+
+void utimediff(double *et)
+{
+	*et = (double)(timer.end.tv_usec - timer.start.tv_usec);
+}
+
+void timediff(double *et)
+{
+	*et = (double)(timer.end.tv_sec - timer.start.tv_sec);
 }
 
 int start_timer()

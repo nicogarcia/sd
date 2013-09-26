@@ -40,41 +40,48 @@ public class TaskThread extends Thread {
 		
 		while(connected){
 			//Recepcion de mensaje
-			request = MessageType.values()[input.read()];
+			request = MessageType.values()[input.readInt()];
+			
 			switch (request) {
 			case GET_TEMP:
 			{
-				answer = String.valueOf(((new Random().nextDouble() * 100 ) % 27));
+				answer = String.format("Temperatura: %.2f°C\n", (new Random().nextDouble() * 100 ) % 27 );
 				break;	
 			}
 			case GET_TIME:
 			{
 				Calendar cal = Calendar.getInstance();
 				cal.getTime();
-				SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-				answer = sdf.format(cal.getTime());
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z");
+				answer = sdf.format(cal.getTime()) + "\n";
 				break;
 			}
-			case GET_USER:
+			case GET_USERS:
 			{
-				answer = System.getProperty("user.name");
+				answer = System.getProperty("user.name") + "\n";
 				break;
 			}
 			case GET_UNAME:
 			{
-				answer = InetAddress.getLocalHost().getHostName();
+				answer = "Nodo: " + InetAddress.getLocalHost().getHostName() + "\n";
+				answer += "Sistema operativo: " + System.getProperty("os.name") + "\n";
 				break;
 			}
-			case CLOSE:
+			case CLOSE_CONN:
 			{
-				answer = "Cerrando la conexión";
+				answer = "Conexión cerrada con exito\n";
 				connected = false;
+				break;
+			}
+			case GET_SERV_VERSION:
+			{
+				answer = Pair.VERSION;
 				break;
 			}
 			default:
 				break;
 			}
-			output.writeUTF(answer);
+			output.write(answer.getBytes());
 		}
 		
 		client_socket.close();

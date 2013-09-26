@@ -1,5 +1,8 @@
 package proyecto1_java;
+
 public class Pair {
+
+	public static final String VERSION = "NAME\n   Peer implementado en Java\nAUTHORS\n   Trippel Nagel Juan Manuel\n   Garcia Nicolas\n";
 	
 	private ServerThread server_thread;
 	private ClientThread client_thread;
@@ -33,10 +36,14 @@ public class Pair {
 	}
 	
 	public static void main(String args[]) {
-		
-		if(args.length == 3){
-			new Pair(Integer.parseInt(args[0]), Integer.parseInt(args[2]), args[1]);
+		if(args.length > 2){
+			if(args[1].equals("-s"))
+				new Pair(Integer.parseInt(args[0]), Integer.parseInt(args[3]), args[2]);
+			else
+				System.out.println("usage: Pair port [-s buddy_hostname buddy_port]");
 		}
+		else if(args.length == 0)
+				System.out.println("usage: Pair port [-s buddy_hostname buddy_port]");
 		else
 			new Pair(Integer.parseInt(args[0]));
 		

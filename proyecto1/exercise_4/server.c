@@ -10,12 +10,13 @@
 #include <netinet/in.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <signal.h>
 
 #define BACKLOG 5 /* Cantidad de clientes que pueden ser atendidos al simultaneo */
 #define DEFAULT_BUFFER_SIZE 2048
 
 int sockfd, /* File descriptor del socket del servidor */
-portno; /* Numero de puerto donde el servidor acepta conexiones */
+	portno; /* Numero de puerto donde el servidor acepta conexiones */
 
 int *buffer_sizes;
 int n_tests = 1;
@@ -26,6 +27,15 @@ void server_exit(); /* Cierra el servidor */
 void server_init(); /* Inicializa el socket y otros parametros del servidor */
 void server_listen(); /* Escucha el socket por pedidos de clientes */
 void *server_task(int *ptr); /* Atiende a un cliente, recibe el file descriptor del socket cliente */
+
+void sig_handler(int signo)
+{
+  if (signo == SIGINT){
+    printf("\nreceived SIGINT\n");
+    server_exit();
+    exit(0);
+  }
+}
 
 void error(const char *msg) {
 	perror(msg);
@@ -38,41 +48,35 @@ void server_listen() {
 	socklen_t clilen = sizeof(cli_addr);
 	pthread_t task;
 
-	printf("(server) Escuchando peticiones ...\n");
-	while(1){
-		newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); /* Espero por pedidos de clientes */
-		if (newsockfd < 0)
-			error("(server) ERROR aceptando la petición");
-
-		//Realizo la tarea de servicio al cliente
-		pthread_create(&task, NULL, (void *)server_task, (void *)&newsockfd);
-	}
+	printf("(server) Listening ...\n");
+	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); /* Espero por pedidos de clientes */
+	if (newsockfd < 0)	error("(server) ERROR accepting request\n");
+	//Realizo la tarea de servicio al cliente
+	pthread_create(&task, NULL, (void *)server_task, (void *)&newsockfd);
+	pthread_join(task, NULL);
 }
 
 void *server_task(int *newsockfd) {
 	char *buffer; /* Creo el buffer para recibir el mensaje */
 	int test, buffsize;
 
-	printf("(server) Iniciando pruebas ...\n");
+	printf("(server) Starting tests ...\n");
 	for (test = 0; test < n_tests; test++) {
-		printf("(server) Realizando prueba de buffer: %i bytes\n", buffer_sizes[test]);
+		printf("(server) Buffer test: %i bytes\n", buffer_sizes[test]);
 
 		buffsize = buffer_sizes[test];
 		buffer = calloc(buffsize, sizeof(char)); /* Creo el nuevo buffer */
 
 		bzero(buffer, buffsize); /* Seteo todos los valores del buffer a cero */
-
 		/* Leo los datos enviados por el cliente */
 		if (recv(*newsockfd, buffer, buffsize - 1, 0) < 0)
-			error("(server) ERROR leyendo del socket");
+			error("(server) ERROR reading socket");
 
 		if (send(*newsockfd, buffer, buffsize - 1, 0) < 0) /* Envio la respuesta al cliente */
-			error("(server) ERROR escribiendo en el socket");
-
-		printf("(server) Prueba exitosa\n");
-
+			error("(server) ERROR  writing socket");
+		printf("(server) Successful test\n");
 	}
-	printf("(server) Fin de las pruebas\n");
+	printf("(server) Tests end\n");
 	close(*newsockfd); /* Termino la conexion con el cliente */
 	pthread_exit(0);
 }
@@ -80,40 +84,35 @@ void *server_task(int *newsockfd) {
 void server_init(int port) {
 	struct sockaddr_in serv_addr; /* sockaddr_in es una estructura que contiene una direccion de internet */
 	portno = port;
-
 	//Creo un socket del tipo stream
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0)
-		error("(server) ERROR abriendo el socket");
+	if (sockfd < 0)	error("(server) ERROR opening socket");
 
 	bzero((char *) &serv_addr, sizeof(serv_addr)); /* Seteo todos los valores de la estructura a cero. */
-
 	//Seteo todos los parametros de la direccion de internet del servidor
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(portno); /* Convierto a orden de la red */
 
-
-	printf("(server) Inicializando sockets ...\n");
+	printf("(server)Socket startup ...\n");
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) /* Intento vincular el puerto */
-		error("(server) ERROR vinculando el socket");
+		error("(server) ERROR binding socket");
 
 	listen(sockfd, BACKLOG); /* Permito escuchar en ese puerto */
 }
 
 void server_exit() {
 	close(sockfd); /* Cierro el socket del servidor */
+	printf("(server) Connection closed\n");
 }
 
 int main(int argc, char *argv[]) {
-	int tests, port;
+	int tests;
 
 	if (argc < 2) {
 		fprintf(stderr, "usage: %s port[-b buffer_lenght[,...]]\n", argv[0]);
 		exit(1);
 	}
-
-	port = atoi(argv[1]);
 
 	//Obtengo el tamaño del buffer, si no se paso se usa el tamaño por defecto
 	if (argc > 2) {
@@ -137,7 +136,8 @@ int main(int argc, char *argv[]) {
 		buffer_sizes[0] = DEFAULT_BUFFER_SIZE;
 	}
 
-	server_init(port); /* Inicializo el servidor */
+	signal(SIGINT, sig_handler); /* Registro el handler de señales */
+	server_init(atoi(argv[1])); /* Inicializo el servidor */
 	server_listen(); /* Escucho por peticiones */
 	server_exit(); /* Cierro el servidor */
 
