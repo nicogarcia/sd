@@ -11,6 +11,8 @@
 #include <netdb.h>
 #include <sys/utsname.h>
 #include <signal.h>
+#include "../lib/table_library.h"
+
 #define MAX_ATTEMPS 4
 
 int server_sockfd; /* Descriptor del socket del servidor */
@@ -72,7 +74,7 @@ int client_connect(int n_test)
 	bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length); /* Copia lenght bytes del primer parametro al segundo */
 	serv_addr.sin_port = htons(tests_res.ports[n_test]); /* Convierte el numero de puerto en orden de bytes de la red */
 
-	printf("(client) Connecting to server ...");
+	printf("client> Connecting to server ...");
 	/* Intento conectar con el servidor */
 	while(attemps < MAX_ATTEMPS && connect(server_sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0){
 		sleep(backoff);
@@ -96,11 +98,12 @@ void client_request(int n_test)
 	//Comiezo el cronometraje
 	res = &tests_res.results[n_test];
 
-	start_timer();
+
 
 	if (send(server_sockfd, &buffer, sizeof(char), 0) < 0) /* Intento enviar el pedido al servidor */
 		error("ERROR writing socket");
 
+	start_timer();
 	if (recv(server_sockfd, &serv_time, sizeof(struct timeval), 0) < 0)
 		error("ERROR reading socket");
 
@@ -124,30 +127,53 @@ void client_request(int n_test)
 	res->time_dev += abs((res->serv_time_u - res->my_time_u));   // us to ms
 }
 
-void show_results(int n_test)
+void show_results()
 {
 	struct tm *nowtm;
 	result_t res;
+	int test = 0;
 	char timef[256], tmbuf[64];
+	int widths[] = { 20, 20, 30, 30, 20 };
+	table* t;
 
-	res = tests_res.results[n_test];
+	printf("RESULTS\n\n");
 
-	printf("RESULTS %i\n", n_test);
-	printf("Server: %s %i\n", tests_res.hostnames[n_test], tests_res.ports[n_test]);
-	printf("Travel time: %.2f ms \n", res.travel_time_s * 1000 + res.travel_time_u);
+	// Initialize table
+	t = table_initialize(5, widths);
 
-	nowtm = localtime(&res.serv_time_s);
-	strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
-	snprintf(timef, sizeof timef, "%s.%06d", tmbuf, res.serv_time_u);
-	printf("Server time: %s\n", timef);
+	// Write row data
+	table_add_row(t);
+	table_add_data(t, 0, 0, "Server");
+	table_add_data(t, 0, 1, "Travel time");
+	table_add_data(t, 0, 2, "Server time");
+	table_add_data(t, 0, 3, "Local time");
+	table_add_data(t, 0, 4, "Time variation");
 
-	nowtm = localtime(&res.my_time_s);
-	strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
-	snprintf(timef, sizeof timef, "%s.%06d", tmbuf, res.my_time_u);
-	printf("Local time: %s\n", timef);
 
-	printf("Time deviation: %.2d ms\n", res.time_dev);
+	for(test = 0; test < tests_res.n_tests; test++)
+	{
+		res = tests_res.results[test];
+		// Write row data
+		table_add_row(t);
+		table_add_data(t, test + 1, 0, "%s %i", tests_res.hostnames[test], tests_res.ports[test]);
+		table_add_data(t, test + 1, 1, "%.2f us", res.travel_time_s * 1000 + res.travel_time_u);
 
+		nowtm = localtime(&res.serv_time_s);
+		strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+		snprintf(timef, sizeof timef, "%s.%06d", tmbuf, res.serv_time_u);
+		table_add_data(t, test + 1, 2, "%s", timef);
+
+
+		nowtm = localtime(&res.my_time_s);
+		strftime(tmbuf, sizeof tmbuf, "%Y-%m-%d %H:%M:%S", nowtm);
+		snprintf(timef, sizeof timef, "%s.%06d", tmbuf, res.my_time_u);
+		table_add_data(t, test + 1, 3, "%s", timef);
+		table_add_data(t, test + 1, 4, "%.2d us", res.time_dev);
+
+	}
+
+	// Print table
+	table_print(t);
 }
 
 int main(int argc, char *argv[])
@@ -180,9 +206,9 @@ int main(int argc, char *argv[])
 	while(test < tests){
 		if(client_connect(test) > 0){
 			client_request(test);
-			show_results(test);
 		}
 		test++;
 	}
+	show_results();
     return 0;
 }

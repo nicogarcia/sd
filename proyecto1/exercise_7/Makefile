@@ -8,7 +8,7 @@ all: server.o client.o
 server.o: server.c
 	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
 
-client.o: client.c timer.c
+client.o: client.c timer.c ../lib/table_library.c
 	$(CC) $(TFLAGS) $(DEST)/$(basename $@) $^
 
 

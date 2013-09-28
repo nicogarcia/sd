@@ -17,7 +17,11 @@
 #define MAX_ATTEMPS 5
 #define BACKLOG 5
 #define PAYLOAD_SIZE 2048
+#define FREE_PEER_DESCRIPTOR -1
 
+struct peer_socketd{
+	int sockfd, peerd;
+};
 
 enum msg_t { GET_USERS, GET_TIME, GET_UNAME, GET_TEMP, GET_SERV_VERSION, CLOSE_CONN};
 
@@ -26,6 +30,9 @@ int buddy_connected,
 	sockfd,
 	peers_connected;
 
+double temp;
+
+int peers_socketsfd[BACKLOG];
 
 machine buddy_mach, mach;
 

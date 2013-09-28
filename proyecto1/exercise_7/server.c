@@ -51,7 +51,7 @@ void server_listen()
 	while(1)
 	{
 		newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen); /* Espero por pedidos de clientes */
-		if (newsockfd < 0) error("(server) ERROR accepting\n");
+		if (newsockfd < 0) error("server> ERROR accepting\n");
 		//Realizo la tarea de servicio al cliente en un nuevo hilo
 		pthread_create(&worker, NULL, server_task, &newsockfd);
 	}
@@ -64,12 +64,12 @@ void *server_task(int *newsockfd)
     char buffer;
 
    	if (recv(*newsockfd, &buffer, sizeof(char), 0) < 0) /* Leo los datos enviados por el cliente */
-   		error("(server) ERROR reading socket");
+   		error("server> ERROR reading socket");
 
    	gettimeofday(&time, NULL);
 
    	if (send(*newsockfd, &time, sizeof(struct timeval), 0) < 0) /* Envio la respuesta al cliente */
-   		error("(server) ERROR writing socket");
+   		error("server> ERROR writing socket");
 
     close(*newsockfd); /* Termino la conexion con el cliente */
     pthread_exit(0);
@@ -82,7 +82,7 @@ void server_init(int port)
 
 	//Creo un socket del tipo stream
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) error("(server) ERROR opening socket");
+	if (sockfd < 0) error("server> ERROR opening socket");
 
 	bzero((char *) &serv_addr, sizeof(serv_addr)); /* Seteo todos los valores de la estructura a cero. */
 	//Seteo todos los parametros de la direccion de internet del servidor
@@ -90,9 +90,9 @@ void server_init(int port)
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	serv_addr.sin_port = htons(portno); /* Convierto a orden de la red */
 
-	printf("(server)Socket startup ...\n");
+	printf("server> Socket startup ...\n");
 	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) /* Intento vincular el puerto */
-		error("(server) ERROR binding socket");
+		error("server> ERROR binding socket");
 
 	listen(sockfd, BACKLOG); /* Permito escuchar en ese puerto */
 }
@@ -100,7 +100,7 @@ void server_init(int port)
 
 void server_exit() {
 	close(sockfd); /* Cierro el socket del servidor */
-	printf("(server) Connection end\n");
+	printf("server> Connection end\n");
 }
 
 int main(int argc, char *argv[])

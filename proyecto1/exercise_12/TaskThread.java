@@ -13,6 +13,7 @@ import proyecto1_java.Message.MessageType;
 public class TaskThread extends Thread {
 	
 	private Socket client_socket;
+	private double temp = (new Random().nextDouble() * 100 ) % 27;
 	
 	public TaskThread(Socket client_socket){
 		this.client_socket = client_socket;
@@ -45,7 +46,7 @@ public class TaskThread extends Thread {
 			switch (request) {
 			case GET_TEMP:
 			{
-				answer = String.format("Temperatura: %.2f°C\n", (new Random().nextDouble() * 100 ) % 27 );
+				answer = String.format("Temperature: %.2f°C\n", temp + (new Random().nextDouble() * 100 ) % 5 );
 				break;	
 			}
 			case GET_TIME:
@@ -63,23 +64,21 @@ public class TaskThread extends Thread {
 			}
 			case GET_UNAME:
 			{
-				answer = "Nodo: " + InetAddress.getLocalHost().getHostName() + "\n";
-				answer += "Sistema operativo: " + System.getProperty("os.name") + "\n";
+				answer = "Node: " + InetAddress.getLocalHost().getHostName() + "\n";
+				answer += "Operating system: " + System.getProperty("os.name") + "\n";
 				break;
 			}
 			case CLOSE_CONN:
 			{
-				answer = "Conexión cerrada con exito\n";
+				answer = "Connection closed\n";
 				connected = false;
 				break;
 			}
 			case GET_SERV_VERSION:
 			{
-				answer = Pair.VERSION;
+				answer = Peer.VERSION;
 				break;
-			}
-			default:
-				break;
+			}		
 			}
 			output.write(answer.getBytes());
 		}

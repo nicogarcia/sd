@@ -19,7 +19,7 @@ public class ServerThread extends Thread {
 	public void run()
 	{
 		try{
-			System.out.println("Inicializando sockets ...");
+			System.out.println("Startup socket ...");
 			this.server_socket = new ServerSocket(this.port); /* crea socket servidor que escuchara en puerto 5000*/
 			this.listen();
 		}catch(IOException ex){ System.err.println(ex.getMessage()); };
